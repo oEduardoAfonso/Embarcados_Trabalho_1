@@ -2,25 +2,61 @@ import socket
 import json
 import sys
 import select
+from view import View
 
-with open("../configuracao_sala_01.json", encoding='utf-8') as config_json:
+with open("./configuracao_sala_01.json", encoding='utf-8') as config_json:
     data = json.load(config_json)
 
 def init():
-    for index in range(len(data['servidores_distribuidos'])):
-        room_number_ip[str(index)] = data['servidores_distribuidos'][index]["ip"]
+    server.bind(src)
+    server.listen()
+
+    room_number_ip["1"] = data['servidores_distribuidos'][0]["ip"]
+    room_number_ip["3"] = data['servidores_distribuidos'][1]["ip"]
+    room_number_ip["4"] = data['servidores_distribuidos'][2]["ip"]
+
+    view._show_room_menu(room_number_ip, room_ip_socket)
+
+
+def find_number_by_ip(room_ip):
+    for number in room_number_ip:
+        if room_number_ip[number] == room_ip:
+            return number
+
+def find_ip_by_socket(socket):
+    for ip in room_ip_socket:
+        if room_ip_socket[ip] == socket:
+            return ip
+
+def find_number_by_socket(socket):
+    ip =  find_ip_by_socket(socket)
+    return find_number_by_ip(ip)
 
 
 def connect():
-    room_socket, room_ip = server.accept()
+    room_socket, room_ip_port = server.accept()
     receiver.append(room_socket)
     rooms.append(room_socket)
-    room_ip_socket[room_ip[0]] = room_socket
-    print(f"Connected to: {room_ip[0]}")
+
+    room_ip_socket[room_ip_port[0]] = room_socket
+    room_number = find_number_by_ip(room_ip_port[0])
+
+    view._clean()
+    print(f"Connected to room: {room_number}")
+    view._show_room_menu(room_number_ip, room_ip_socket)
 
 def receive_message(connection):
     msg = connection.recv(1024).decode("utf-8")
-    print(f"[SALA]: {msg}")
+    if msg:
+        print(f"[SALA]: {msg}")
+    else:
+        view._clean()
+        print(f"Closing connection to room: {find_number_by_socket(connection)}")
+        receiver.remove(connection)
+        rooms.remove(connection)
+        del room_ip_socket[find_ip_by_socket(connection)]
+        connection.close()
+        view._show_room_menu(room_number_ip, room_ip_socket)
 
 def send_message(connection):
     msg = input()
@@ -28,10 +64,10 @@ def send_message(connection):
     room_ip = room_number_ip[msg[0]]
     room_socket = room_ip_socket[room_ip]
 
-    print("Mensagem: ")
-    msg = connection.readline()
-
-    room_socket.sendall(msg.encode("utf-8"))
+    chooses = view._show_menu(connection)
+    print(chooses)
+    view._clean()
+    room_socket.sendall(chooses.encode("utf-8"))
 
 PORT = data['servidor_central']['porta']
 IP = data['servidor_central']['ip']
@@ -45,11 +81,8 @@ receiver = [sys.stdin, server]
 rooms = []
 room_number_ip = {}
 room_ip_socket = {}
-
+view = View()
 init()
-
-server.bind(src)
-server.listen(5)
 
 try:
     while True:
@@ -61,8 +94,9 @@ try:
                 receive_message(connection)
             else:
                 send_message(connection)
+                view._show_room_menu(room_number_ip, room_ip_socket)
 
 except KeyboardInterrupt:
-    print("Finalizando...")
+    print("Application Closing")
 finally:
     server.close()
