@@ -8,6 +8,8 @@ import RPi.GPIO as GPIO
 from controller import Controller
 
 def init():
+    server.connect(dest)
+
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
 
@@ -27,9 +29,8 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 dest = (IP, PORT)
 
 init()
-controller = Controller(data)
-server.connect(dest)
 
+controller = Controller(data, server)
 
 try:
     while True:
@@ -38,8 +39,9 @@ try:
             if connection is server:
                 msg = connection.recv(1024).decode("utf-8")
                 if msg:
-                    print(f"chooses: {msg}")
-                    controller._execute_option(msg)
+                    result = controller._execute_option(msg)
+                    if result:
+                        server.send(bytes(result, 'utf-8'))
                 else:
                     server.close()
             else:
@@ -48,4 +50,5 @@ try:
 except (KeyboardInterrupt, ValueError):
     print("Application Closing")
 finally:
+    GPIO.cleanup()
     server.close()
