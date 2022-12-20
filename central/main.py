@@ -135,7 +135,6 @@ def send_message(connection):
                     print(msg)
                 print("\nPress [ENTER] to go back to menu")
                 connection.readline()
-        print(f"commands: {commands}")
         if commands:
             writer._write_row(writer._to_command(commands))
 

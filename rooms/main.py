@@ -3,6 +3,7 @@ import socket
 import select
 import sys
 import json
+import time
 import RPi.GPIO as GPIO
 from controller import Controller
 
@@ -16,7 +17,16 @@ def init():
     for input in data['inputs']:
         GPIO.setup(input['gpio'], GPIO.IN)
 
-    server.connect(dest)
+    is_connected = False
+
+    while not is_connected:
+        print("Trying to connect...")
+        try:
+            server.connect(dest)
+            is_connected = True
+            print("Connected to server")
+        except ConnectionRefusedError:
+            time.sleep(1)
 
 with io.open("./configuracao_sala.json", encoding='utf-8') as config_json:
     data = json.load(config_json)
