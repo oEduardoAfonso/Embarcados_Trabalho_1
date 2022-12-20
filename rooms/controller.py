@@ -38,6 +38,14 @@ class Controller():
         if self.occupation > 0:
             self.occupation = self.occupation - 1
 
+    def _handle_motion_detector(self, pin):
+        if self.security_alarm_status:
+            self._notify_security_alarm(self.data['inputs'][0]['gpio'])
+        else:
+            self._execute_on_off(["1"], [self.data['outputs'][0], self.data['outputs'][1]])
+            time.sleep(15)
+            self._execute_on_off(["2"], [self.data['outputs'][0], self.data['outputs'][1]])
+
     def _notify_security_alarm(self, pin):
         if self.security_alarm_status:
             self.server.sendall("2".encode("utf-8"))
@@ -61,6 +69,10 @@ class Controller():
             return self._execute_alarm()
         elif chooses[0] ==  "7":
             return self._execute_dht22()
+        elif chooses[0] ==  "8":
+            return self._check_security_sensors()
+        elif chooses[0] ==  "9":
+            return self._turn_devices_off()
 
     def _execute_consult(self):
         result = ""
@@ -132,6 +144,16 @@ class Controller():
 
     def _execute_alarm(self):
         GPIO.output(self.data['outputs'][4]['gpio'], True)
+
+    def _check_security_sensors(self):
+        status_motion = GPIO.input(self.data['inputs'][0]['gpio'])
+        status_window= GPIO.input(self.data['inputs'][2]['gpio'])
+        status_door = GPIO.input(self.data['inputs'][3]['gpio'])
+
+        return "1" if status_motion or status_window or status_door else "2"
+
+    def _turn_devices_off(self):
+        return self._execute_on_off(["2"], self.data['outputs'].pop())
 
     def _execute_dht22(self):
         humidity = None

@@ -62,7 +62,7 @@ def connect():
     room_ip_socket[room_ip_port[0]] = room_socket
     room_number = find_number_by_ip(room_ip_port[0])
 
-    print(f"\nRoom number [{room_number}] connected")
+    print(f"\nRoom number [{room_number}] connected.\nGetting DHT22 data...")
     time.sleep(1)
 
 def receive_message(connection):
@@ -95,17 +95,51 @@ def send_message(connection):
     commands = None
 
     if msg:
-        if msg[0] == "8":
-            chooses = "4"
+        if msg[0] == "7":
+            view._show_all_rooms_menu()
+            all_rooms_command = input()
+            all_rooms_message = ""
 
-            view.security_alarm_status = not view.security_alarm_status
-
-            chooses = chooses + ("1" if view.security_alarm_status else "2")
-
-            commands = chooses
+            if all_rooms_command[0] == "1":
+                all_rooms_message = "2131"
+            elif all_rooms_command[0] == "2":
+                all_rooms_message = "9"
+            else:
+                return
 
             for room in rooms:
-                room.sendall(chooses.encode("utf-8"))
+                room.sendall(all_rooms_message.encode("utf-8"))
+                room_response = room.recv(1024).decode("utf-8")
+
+            if len(room_response) > 0:
+                view._clean()
+                print("All rooms were changed")
+                print("\nPress [ENTER] to go back to menu")
+                connection.readline()
+
+        elif msg[0] == "8":
+            security_sensors_active = False
+            for room in rooms:
+                room.sendall("8".encode("utf-8"))
+                room_sensors_status = room.recv(1024).decode("utf-8")
+                if room_sensors_status[0] == "1":
+                    security_sensors_active = True
+
+            if security_sensors_active:
+                print("[ERROR] Failed to activate security system\n[ERROR] There are motion sensors ON")
+                print("\nPress [ENTER] to go back to menu")
+                connection.readline()
+            else:
+                chooses = "4"
+
+                view.security_alarm_status = not view.security_alarm_status
+
+                chooses = chooses + ("1" if view.security_alarm_status else "2")
+
+                commands = chooses
+
+                for room in rooms:
+                    room.sendall(chooses.encode("utf-8"))
         elif msg[0] == "9":
             chooses = "5"
 

@@ -17,9 +17,15 @@ class View():
         print("\nChoose an option:")
 
         self._show_room_menu(room_number_ip, room_ip_socket, room_number_occupation, room_number_dht)
+        print(f"[7] - Change all rooms at once")
         print(f"[8] - Change security alarm system ({security_alarm_status_str})")
         print(f"[9] - Change fire alarm system ({fire_alarm_status_str})\n")
         self._show_building_occupation(room_ip_socket, room_number_occupation)
+
+    def _show_all_rooms_menu(self):
+        print(f"[1] - Turn all Lâmpadas ON")
+        print(f"[2] - Turn all devices OFF")
+        print("\n[0] - Go back to last menu\n")
 
     def _show_room_menu(self, room_number_ip, room_ip_socket, room_number_occupation, room_number_dht):
         if len(room_ip_socket) != 0:
