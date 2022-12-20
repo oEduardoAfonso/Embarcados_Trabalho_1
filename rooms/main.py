@@ -41,7 +41,6 @@ try:
                 if msg:
                     result = controller._execute_option(msg)
                     if result:
-
                         server.send(bytes(result, 'utf-8'))
                 else:
                     server.close()

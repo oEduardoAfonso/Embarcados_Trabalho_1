@@ -127,11 +127,14 @@ def send_message(connection):
 
                 view._clean()
                 room_socket.sendall(chooses.encode("utf-8"))
+
+                msg = room_socket.recv(1024).decode("utf-8")
                 if chooses[0] == "1":
-                    msg = room_socket.recv(1024).decode("utf-8")
                     print(f"Status Room [{find_number_by_ip(room_ip)}] :\n{msg}")
-                    print("Press [ENTER] to go back to menu")
-                    connection.readline()
+                else:
+                    print(msg)
+                print("\nPress [ENTER] to go back to menu")
+                connection.readline()
         print(f"commands: {commands}")
         if commands:
             writer._write_row(writer._to_command(commands))

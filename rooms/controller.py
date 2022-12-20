@@ -50,7 +50,7 @@ class Controller():
         if chooses[0] ==  "1":
             return self._execute_consult()
         elif chooses[0] ==  "2":
-            self._execute_change(chooses[1:])
+            return self._execute_change(chooses[1:])
         elif chooses[0] ==  "3":
             return str(self.occupation)
         elif chooses[0] ==  "4":
@@ -74,30 +74,44 @@ class Controller():
 
     def _execute_change(self, chooses):
         if chooses[0] ==  "1":
-            self._execute_change_lamps(chooses[1:])
+            return self._execute_change_lamps(chooses[1:])
         elif chooses[0] ==  "2":
-            self._execute_on_off(chooses[1:], [self.data["outputs"][2]["gpio"]])
+            return self._execute_on_off(chooses[1:], [self.data["outputs"][2]])
         elif chooses[0] ==  "3":
-            self._execute_on_off(chooses[1:], [self.data["outputs"][3]["gpio"]])
+            return self._execute_on_off(chooses[1:], [self.data["outputs"][3]])
 
     def _execute_change_lamps(self, chooses):
         if chooses[0] ==  "1":
-            self._execute_on_off(chooses[1:], [self.data["outputs"][0]["gpio"]])
+            return self._execute_on_off(chooses[1:], [self.data["outputs"][0]])
         elif chooses[0] ==  "2":
-            self._execute_on_off(chooses[1:], [self.data["outputs"][1]["gpio"]])
+            return self._execute_on_off(chooses[1:], [self.data["outputs"][1]])
         elif chooses[0] ==  "3":
-            self._execute_on_off(chooses[1:], [self.data["outputs"][0]["gpio"], self.data["outputs"][1]["gpio"]])
+            return self._execute_on_off(chooses[1:], [self.data["outputs"][0], self.data["outputs"][1]])
 
     def _execute_change_projector(self, chooses):
-        self._execute_on_off(chooses[1:], [self.data["outputs"][0]["gpio"]])
+        return self._execute_on_off(chooses[1:], [self.data["outputs"][0]])
 
     def _execute_on_off(self, chooses, outputs):
+        msg = ""
+
         if chooses[0] ==  "1":
             for output in outputs:
-                GPIO.output(output, True)
+                current_state = GPIO.input(output["gpio"])
+                if current_state == False:
+                    GPIO.output(output["gpio"], True)
+                    msg = msg + f"{output['tag']} was turned ON\n"
+                else:
+                    msg = msg + f"{output['tag']} was already ON\n"
         elif chooses[0] ==  "2":
             for output in outputs:
-                GPIO.output(output, False)
+                current_state = GPIO.input(output["gpio"])
+                if current_state == True:
+                    GPIO.output(output["gpio"], False)
+                    msg = msg + f"{output['tag']} was turned OFF\n"
+                else:
+                    msg = msg + f"{output['tag']} was already OFF\n"
+
+        return msg
 
     def _update_security_alarm(self, chooses):
         if chooses[0] == "1":

@@ -57,9 +57,9 @@ class View():
 
     def _show_change_menu(self, connection):
         print("\nWhich device you'd like to change?")
-        print("[1] - Lamps")
-        print("[2] - Projector")
-        print("[3] - Air Conditioner")
+        print("[1] - Lâmpadas")
+        print("[2] - Projetor Multimidia")
+        print("[3] - Ar-Condicionado (1º Andar)")
         print("\n[0] - Go back to last menu\n")
 
         msg = connection.readline()
@@ -76,8 +76,8 @@ class View():
 
     def _show_lamp_menu(self, connection):
         print("\nWhich lamp you'd like to change?")
-        print("[1] - Lamp 1")
-        print("[2] - Lamp 2")
+        print("[1] - Lâmpada 1")
+        print("[2] - Lâmpada 2")
         print("[3] - Both")
         print("\n[0] - Go back to last menu\n")
 

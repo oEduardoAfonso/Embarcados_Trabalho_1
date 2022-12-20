@@ -38,17 +38,17 @@ class Writer():
         if commands[0] == "1":
             return self._get_lamp(commands[1:])
         elif commands[0] == "2":
-            return "the projector " + self._get_on_off(commands[1:])
+            return "the \'Projetor Multimidia\' " + self._get_on_off(commands[1:])
         elif commands[0] == "3":
-            return "the air conditioner " + self._get_on_off(commands[1:])
+            return "the \'Ar-Condicionado (1º Andar)\' " + self._get_on_off(commands[1:])
 
     def _get_lamp(self, commands):
         if commands[0] == "1":
-            return "the lamp 1 " + self._get_on_off(commands[1:])
+            return "the \'Lâmpada 1\' " + self._get_on_off(commands[1:])
         elif commands[0] == "2":
-            return "the lamp 2 " + self._get_on_off(commands[1:])
+            return "the \'Lâmpada 2\' " + self._get_on_off(commands[1:])
         elif commands[0] == "3":
-            return "both lamps " + self._get_on_off(commands[1:])
+            return "both \'Lâmpadas\' " + self._get_on_off(commands[1:])
 
     def _get_on_off(self, commands):
         if commands[0] == "1":
