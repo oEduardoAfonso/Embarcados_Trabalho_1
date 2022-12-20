@@ -3,13 +3,10 @@ import socket
 import select
 import sys
 import json
-# import time
 import RPi.GPIO as GPIO
 from controller import Controller
 
 def init():
-    server.connect(dest)
-
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
 
@@ -18,6 +15,8 @@ def init():
 
     for input in data['inputs']:
         GPIO.setup(input['gpio'], GPIO.IN)
+
+    server.connect(dest)
 
 with io.open("./configuracao_sala.json", encoding='utf-8') as config_json:
     data = json.load(config_json)
@@ -35,12 +34,14 @@ controller = Controller(data, server)
 try:
     while True:
         inputs, _, _ = select.select([sys.stdin, server], [], [])
+
         for connection in inputs:
             if connection is server:
                 msg = connection.recv(1024).decode("utf-8")
                 if msg:
                     result = controller._execute_option(msg)
                     if result:
+
                         server.send(bytes(result, 'utf-8'))
                 else:
                     server.close()

@@ -21,22 +21,16 @@ class Writer():
         return self._get_first_command(commands)
 
     def _get_first_command(self, commands):
-        if commands[0] == "1":
-            return "Accessed room " + self._get_room(commands[1:])
-        elif commands[0] == "4":
+        if commands[0] == "4":
             return "Turned security alarm system " + self._get_on_off(commands[1:])
         elif commands[0] == "5":
             return "Turned fire alarm system " + self._get_on_off(commands[1:])
-
-    def _get_room(self, commands):
-        if len(commands) == 0:
-            return "but none were connected"
         else:
-            return f"number {commands[0]}" + self._get_consult_or_change(commands[1:])
+            return f"Accessed room number {commands[0]} " + self._get_consult_or_change(commands[1:])
 
     def _get_consult_or_change(self, commands):
         if commands[0] == "1":
-            return " and consulted the status"
+            return "and consulted the status"
         elif commands[0] == "2":
             return "and turned " + self._get_device(commands[1:])
 

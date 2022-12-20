@@ -1,5 +1,8 @@
 import RPi.GPIO as GPIO
 import socket
+import adafruit_dht
+import board
+import time
 
 class Controller():
     data: dict
@@ -7,6 +10,7 @@ class Controller():
     occupation: int
     security_alarm_status: bool
     fire_alarm_status: bool
+    dht22: adafruit_dht.DHT22
 
     def __init__(self, data, server):
         self.data = data
@@ -14,6 +18,9 @@ class Controller():
         self.occupation = 0
         self.security_alarm_status = False
         self.fire_alarm_status = False
+
+        pin = board.D4 if data['sensor_temperatura'][0]['gpio'] == 4 else board.D18
+        self.dht22 = adafruit_dht.DHT22(pin, use_pulseio=False)
 
         GPIO.add_event_detect(self.data['inputs'][4]['gpio'], GPIO.RISING, callback=self._increase_occupation)
         GPIO.add_event_detect(self.data['inputs'][5]['gpio'], GPIO.RISING, callback=self._decrease_occupation)
@@ -52,6 +59,8 @@ class Controller():
             return self._update_fire_alarm(chooses[1:])
         elif chooses[0] ==  "6":
             return self._execute_alarm()
+        elif chooses[0] ==  "7":
+            return self._execute_dht22()
 
     def _execute_consult(self):
         result = ""
@@ -109,3 +118,16 @@ class Controller():
 
     def _execute_alarm(self):
         GPIO.output(self.data['outputs'][4]['gpio'], True)
+
+    def _execute_dht22(self):
+        humidity = None
+        temperature = None
+        while humidity == None and temperature == None:
+            try:
+                self.dht22.measure()
+                temperature = self.dht22.temperature
+                humidity = self.dht22.humidity
+            except RuntimeError:
+                print("Fail to read DHT22")
+                time.sleep(0.1)
+        return f"Temperature: {temperature} C, Humidity: {humidity}%"

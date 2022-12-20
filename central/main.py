@@ -2,6 +2,7 @@ import socket
 import json
 import sys
 import select
+import time
 from view import View
 from writer import Writer
 
@@ -16,6 +17,7 @@ def init():
     room_number_ip["3"] = data['servidores_distribuidos'][1]["ip"]
     room_number_ip["4"] = data['servidores_distribuidos'][2]["ip"]
 
+    view._clean()
     show_main_menu()
 
 
@@ -33,18 +35,24 @@ def find_number_by_socket(socket):
     ip =  find_ip_by_socket(socket)
     return find_number_by_ip(ip)
 
-def update_room_occupation():
+def update_room_data():
     for room_number in room_number_ip:
         if room_number_ip[room_number] in room_ip_socket:
             room_ip = room_number_ip[room_number]
             room_socket = room_ip_socket[room_ip]
+
             room_socket.sendall("3".encode("utf-8"))
             occupation = room_socket.recv(1024).decode("utf-8")
             room_number_occupation[room_number] = occupation
 
+            room_socket.sendall("7".encode("utf-8"))
+            dht = room_socket.recv(1024).decode("utf-8")
+            room_number_dht[room_number] = dht
+
 def show_main_menu():
-    update_room_occupation()
-    view._show_first_menu()
+    update_room_data()
+    view._clean()
+    view._show_first_menu(room_number_ip, room_ip_socket, room_number_occupation, room_number_dht)
 
 def connect():
     room_socket, room_ip_port = server.accept()
@@ -54,9 +62,8 @@ def connect():
     room_ip_socket[room_ip_port[0]] = room_socket
     room_number = find_number_by_ip(room_ip_port[0])
 
-    view._clean()
-    print(f"Connected to room: {room_number}")
-    show_main_menu()
+    print(f"\nRoom number [{room_number}] connected")
+    time.sleep(1)
 
 def receive_message(connection):
     msg = connection.recv(1024).decode("utf-8")
@@ -74,59 +81,60 @@ def receive_message(connection):
 
     else:
         view._clean()
-        print(f"Closing connection to room number: {find_number_by_socket(connection)}")
+        print(f"Closing connection to room [{find_number_by_socket(connection)}]")
         receiver.remove(connection)
         rooms.remove(connection)
         number = find_number_by_socket(connection)
         del room_ip_socket[find_ip_by_socket(connection)]
         del room_number_occupation[number]
         connection.close()
-        show_main_menu()
 
 def send_message(connection):
     msg = input()
     view._clean()
-    commands = ""
+    commands = None
 
-    if msg[0] == "1":
-        commands = msg[0]
+    if msg:
+        if msg[0] == "8":
+            chooses = "4"
 
-        chooses = view._show_menus(connection, room_number_ip, room_ip_socket, room_number_occupation)
+            view.security_alarm_status = not view.security_alarm_status
 
-        if chooses:
-            commands = commands + chooses
+            chooses = chooses + ("1" if view.security_alarm_status else "2")
 
-            room_ip = room_number_ip[chooses[0]]
-            room_socket = room_ip_socket[room_ip]
+            commands = chooses
 
-            view._clean()
-            room_socket.sendall(chooses[1:].encode("utf-8"))
-            if chooses[1] == "1":
-                msg = room_socket.recv(1024).decode("utf-8")
-                print(f"Room {find_number_by_ip(room_ip)} status:\n{msg}")
-    if msg[0] == "2":
-        chooses = "4"
+            for room in rooms:
+                room.sendall(chooses.encode("utf-8"))
+        elif msg[0] == "9":
+            chooses = "5"
 
-        view.security_alarm_status = not view.security_alarm_status
+            view.fire_alarm_status = not view.fire_alarm_status
 
-        chooses = chooses + ("1" if view.security_alarm_status else "2")
+            chooses = chooses + ("1" if view.fire_alarm_status else "2")
 
-        commands = chooses
+            commands = chooses
+            for room in rooms:
+                room.sendall(chooses.encode("utf-8"))
+        else:
+            chooses = view._show_menus(connection, msg[0])
 
-        for room in rooms:
-            room.sendall(chooses.encode("utf-8"))
-    if msg[0] == "3":
-        chooses = "5"
+            if chooses:
+                commands = msg[0] + chooses
 
-        view.fire_alarm_status = not view.fire_alarm_status
+                room_ip = room_number_ip[msg[0]]
+                room_socket = room_ip_socket[room_ip]
 
-        chooses = chooses + ("1" if view.fire_alarm_status else "2")
-
-        commands = chooses
-        for room in rooms:
-            room.sendall(chooses.encode("utf-8"))
-    print(f"commands: {commands}")
-    writer._write_row(writer._to_command(commands))
+                view._clean()
+                room_socket.sendall(chooses.encode("utf-8"))
+                if chooses[0] == "1":
+                    msg = room_socket.recv(1024).decode("utf-8")
+                    print(f"Status Room [{find_number_by_ip(room_ip)}] :\n{msg}")
+                    print("Press [ENTER] to go back to menu")
+                    connection.readline()
+        print(f"commands: {commands}")
+        if commands:
+            writer._write_row(writer._to_command(commands))
 
 PORT = data['servidor_central']['porta']
 IP = data['servidor_central']['ip']
@@ -141,13 +149,17 @@ rooms = []
 room_number_ip = {}
 room_ip_socket = {}
 room_number_occupation = {}
+room_number_dht = {}
 view = View()
 writer = Writer()
 init()
 
 try:
     while True:
-        inputs, _, _ = select.select(receiver, [], [])
+        show_main_menu()
+        timeout = 2.0 if len(rooms) > 0 else None
+        inputs, _, _ = select.select(receiver, [], [], timeout)
+
         for connection in inputs:
             if connection is server:
                 connect()
@@ -155,7 +167,7 @@ try:
                 receive_message(connection)
             else:
                 send_message(connection)
-                show_main_menu()
+
 
 except (KeyboardInterrupt, OSError):
     print("Application Closing")
