@@ -1,20 +1,20 @@
 {
-    "servidor_central": {
-        "ip": "164.41.98.26",
-        "porta": 1320
-    },
-    "servidores_distribuidos": [
+    "servidores": [
         {
-            "ip": "164.41.98.16",
-            "porta": 1321
+            "ip": "164.41.98.29",
+            "porta": 10662
+        },
+        {
+            "ip": "164.41.98.26",
+            "porta": 10661
         },
         {
             "ip": "164.41.98.28",
-            "porta": 1322
+            "porta": 10663
         },
         {
             "ip": "164.41.98.15",
-            "porta": 1323
+            "porta": 10664
         }
     ],
     "nome": "Sala 01",

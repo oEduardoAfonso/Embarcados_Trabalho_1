@@ -153,17 +153,20 @@ class Controller():
         return "1" if status_motion or status_window or status_door else "2"
 
     def _turn_devices_off(self):
-        return self._execute_on_off(["2"], self.data['outputs'].pop())
+        return self._execute_on_off(["2"], self.data['outputs'][:-1])
 
     def _execute_dht22(self):
-        humidity = None
+        counter = 0
         temperature = None
-        while humidity == None and temperature == None:
+        humidity = None
+
+        while counter < 3 and not temperature and not humidity:
             try:
                 self.dht22.measure()
                 temperature = self.dht22.temperature
                 humidity = self.dht22.humidity
             except RuntimeError:
-                print("Fail to read DHT22")
-                time.sleep(0.1)
-        return f"Temperature: {temperature} C, Humidity: {humidity}%"
+                counter += 1
+
+        print("Fail to read DHT22")
+        return f"Temperature: {temperature} C, Humidity: {humidity} %"
