@@ -25,9 +25,9 @@ class Controller():
         GPIO.add_event_detect(self.data['inputs'][4]['gpio'], GPIO.RISING, callback=self._increase_occupation)
         GPIO.add_event_detect(self.data['inputs'][5]['gpio'], GPIO.RISING, callback=self._decrease_occupation)
 
-        GPIO.add_event_detect(self.data['inputs'][0]['gpio'], GPIO.RISING, callback=self._notify_security_alarm)
-        GPIO.add_event_detect(self.data['inputs'][2]['gpio'], GPIO.RISING, callback=self._notify_security_alarm)
-        GPIO.add_event_detect(self.data['inputs'][3]['gpio'], GPIO.RISING, callback=self._notify_security_alarm)
+        GPIO.add_event_detect(self.data['inputs'][0]['gpio'], GPIO.RISING, callback=self._handle_motion_detector)
+        GPIO.add_event_detect(self.data['inputs'][2]['gpio'], GPIO.RISING, callback=self._handle_motion_detector)
+        GPIO.add_event_detect(self.data['inputs'][3]['gpio'], GPIO.RISING, callback=self._handle_motion_detector)
 
         GPIO.add_event_detect(self.data['inputs'][1]['gpio'], GPIO.RISING, callback=self._notify_fire_alarm)
 
@@ -168,5 +168,6 @@ class Controller():
             except RuntimeError:
                 counter += 1
 
-        print("Fail to read DHT22")
+        if not temperature and not humidity:
+            print("Fail to read DHT22")
         return f"Temperature: {temperature} C, Humidity: {humidity} %"

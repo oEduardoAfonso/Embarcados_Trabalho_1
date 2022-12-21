@@ -78,8 +78,13 @@ def mainCentral(room_number):
                 display_msg = f"Fire alarm buzzer activated by room: {find_number_by_socket(connection)}"
                 writer._write_row(display_msg)
                 print(display_msg)
-            for room in rooms:
-                room.sendall("6".encode("utf-8"))
+
+            if msg[0] == "2" or msg[0] == "3":
+                for room in rooms:
+                    room.sendall("6".encode("utf-8"))
+
+                print("\nPress [ENTER] to go back to menu")
+                input()
 
         else:
             view._clean()
